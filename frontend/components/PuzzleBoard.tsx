@@ -46,6 +46,8 @@ const createGridNodes = () => {
         data: {
           label: `${idCounter}`,
           active: coloredNumbers.has(`${idCounter}`),
+          sourceHandles: 2,
+          targetHandles: 2,
         },
       });
 
@@ -57,37 +59,26 @@ const createGridNodes = () => {
 };
 
 const initialNodes: Node[] = createGridNodes();
-const initialEdges: Edge[] = [];
+const initialEdges: Edge[] = ["1-2", "2-3", "3-10", "10-17"].map((id) => ({
+  id,
+  source: id.split("-")[0],
+  target: id.split("-")[1],
+  animated: true,
+}));
 
 export default function PuzzleBoard() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const isValidConnection = (conn: Connection) => {
-  if (!conn.source || !conn.target) return false;
-  
-  const source = Number(conn.source);
-  const target = Number(conn.target);
-  const diff = Math.abs(source - target);
-
-  const sourceRow = Math.floor((source - 1) / 7);
-  const targetRow = Math.floor((target - 1) / 7);
-
-  // Vertical: difference is exactly 7
-  if (diff === 7) return true;
-
-  // Horizontal: difference is 1 AND same row
-  if (diff === 1 && sourceRow === targetRow) return true;
-
-  return false;
-};
+    if (!conn.source || !conn.target) return false;
+    return conn.source !== conn.target;
+  };
 
   // FIXED: Proper connection handler
   const onConnect = (params: Edge | Connection) => {
     if (isValidConnection(params as Connection)) {
       setEdges((eds) => addEdge({ ...params, animated: true }, eds));
-    } else {
-      alert("❌ Invalid path!");
     }
   };
 
@@ -104,10 +95,11 @@ export default function PuzzleBoard() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={{ type: "smoothstep", animated: false }}
         onNodeClick={onNodeClick}
         fitView
       >
-        <Background gap={12} size={1} color="#ddd" />
+        <Background gap={24} size={1} color="#ddd" />
         <Controls />
       </ReactFlow>
     </div>
