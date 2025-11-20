@@ -15,12 +15,8 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import PuzzleNode from "./PuzzleNode";
 
-// Register custom nodes
-const nodeTypes = {
-  puzzle: PuzzleNode,
-};
+const nodeTypes = { puzzle: PuzzleNode };
 
-// Generate 49 nodes in a 7x7 grid
 const createGridNodes = () => {
   const nodes: Node[] = [];
   const gridSize = 7;
@@ -28,7 +24,6 @@ const createGridNodes = () => {
 
   let idCounter = 1;
 
-  // Nodes to highlight as puzzle steps (replace with actual puzzle path)
   const coloredNumbers = new Set([
     "1",
     "4",
@@ -68,12 +63,26 @@ export default function PuzzleBoard() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Allowed path example (change later)
-  const allowedConnections = ["1-8", "8-15", "15-16", "16-23"];
+  const isValidConnection = (conn: Connection) => {
+  if (!conn.source || !conn.target) return false;
+  
+  const source = Number(conn.source);
+  const target = Number(conn.target);
+  const diff = Math.abs(source - target);
 
-  const isValidConnection = (conn: Connection) =>
-    allowedConnections.includes(`${conn.source}-${conn.target}`);
+  const sourceRow = Math.floor((source - 1) / 7);
+  const targetRow = Math.floor((target - 1) / 7);
 
+  // Vertical: difference is exactly 7
+  if (diff === 7) return true;
+
+  // Horizontal: difference is 1 AND same row
+  if (diff === 1 && sourceRow === targetRow) return true;
+
+  return false;
+};
+
+  // FIXED: Proper connection handler
   const onConnect = (params: Edge | Connection) => {
     if (isValidConnection(params as Connection)) {
       setEdges((eds) => addEdge({ ...params, animated: true }, eds));
@@ -91,7 +100,7 @@ export default function PuzzleBoard() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onConnect={onConnect}
+        onConnect={onConnect}       // << correct handler
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
